@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { availableReasons, plumbers } from "@/lib/data";
 
+type BookingStep = "initial" | "estimation" | "contact";
+
 export default function Home() {
-  const [selectedId, setSelectedId] = useState(plumbers[0].id);
+  const [step, setStep] = useState<BookingStep>("initial");
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [selectedPlumberId, setSelectedPlumberId] = useState(plumbers[0].id);
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [problem, setProblem] = useState("");
-  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   const photoPreview = useMemo(
@@ -28,33 +31,44 @@ export default function Home() {
   }, [photoPreview]);
 
   const selected =
-    plumbers.find((plumber) => plumber.id === selectedId) ?? plumbers[0];
+    plumbers.find((plumber) => plumber.id === selectedPlumberId) ?? plumbers[0];
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    if (file) {
+      setSelectedPhoto(file);
+      const randomPlumber = plumbers[Math.floor(Math.random() * plumbers.length)];
+      setSelectedPlumberId(randomPlumber.id);
+      setStep("estimation");
+    }
+  };
+
+  const handleSubmitContact = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitted(true);
-    setName("");
-    setPhone("");
-    setAddress("");
-    setProblem("");
-    setSelectedPhoto(null);
+    setTimeout(() => {
+      setName("");
+      setPhone("");
+      setAddress("");
+      setSelectedPhoto(null);
+      setStep("initial");
+    }, 2000);
   };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-950">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-light-radial" />
-      <main className="relative mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8 flex flex-col gap-5 rounded-4xl border border-slate-200/80 bg-white/90 px-6 py-6 shadow-[0_28px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+      <main className="relative mx-auto max-w-2xl px-5 py-8 sm:px-6 lg:px-8">
+        <header className="mb-12 flex flex-col gap-5 rounded-4xl border border-slate-200/80 bg-white/90 px-6 py-6 shadow-[0_28px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div>
             <p className="mb-2 text-sm uppercase tracking-[0.3em] text-sky-600">
               Nova Intervention
             </p>
-            <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              Réservez un plombier proche en quelques clics.
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+              Reservez un depannage plomberie.
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              Un parcours agréable, mobile-first et fluide pour choisir votre
-              intervention, puis accéder à votre dashboard.
+            <p className="mt-4 text-base leading-7 text-slate-600">
+              3 etapes simples : photo • estimation • confirmation.
             </p>
           </div>
 
@@ -69,367 +83,303 @@ export default function Home() {
               href="/profile"
               className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:border-slate-400 hover:bg-slate-100"
             >
-              Voir le dashboard
+              Dashboard
             </Link>
           </div>
         </header>
 
-        <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-          <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-3">
-              {availableReasons.map((reason) => (
-                <div
-                  key={reason}
-                  className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1"
-                >
-                  <p className="text-sm font-semibold text-slate-900">
-                    {reason}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-4xl border border-slate-200/80 bg-white p-6 shadow-lg transition duration-300 hover:-translate-y-1">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
-                    Accueil
-                  </p>
-                  <h2 className="mt-2 text-3xl font-semibold text-slate-950">
-                    Plombiers proches, transparence totale.
-                  </h2>
-                </div>
-                <span className="rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
-                  4 plombiers disponibles maintenant
-                </span>
+        {/* STEP 1: INITIAL - Take Photo */}
+        {step === "initial" && (
+          <section className="space-y-6">
+            <div className="rounded-4xl border border-slate-200/80 bg-white p-8 shadow-xl">
+              <div className="mb-8 text-center">
+                <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
+                  Etape 1 / 3
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold text-slate-950">
+                  Prenez une photo
+                </h2>
+                <p className="mt-4 text-slate-600">
+                  Montrez-nous votre probleme en une photo. Nous analyserons et
+                  proposerons une estimation.
+                </p>
               </div>
-              <p className="mt-4 text-slate-600">
-                Comparez spécialités, tarifs et disponibilités, puis passez à
-                l’étape suivante en un seul geste.
-              </p>
-            </div>
-          </div>
 
-          <div className="overflow-hidden rounded-4xl bg-slate-950 text-white shadow-[0_32px_120px_rgba(15,23,42,0.18)]">
-            <Image
-              src="/plombier.png"
-              alt="Plombier en intervention"
-              className="h-96 w-full object-cover"
-              width={1200}
-              height={720}
-              unoptimized
-            />
-            <div className="space-y-4 p-6">
-              <p className="text-sm uppercase tracking-[0.3em] text-cyan-200">
-                Service expert
-              </p>
-              <h2 className="text-3xl font-semibold">
-                Dépannage express et service premium
-              </h2>
-              <p className="text-slate-300">
-                Un univers clair et moderne pour commander un plombier, gérer
-                vos interventions et visualiser vos dépenses.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section id="plumbers" className="mt-14">
-          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
-                Plombiers disponibles
-              </p>
-              <h2 className="mt-2 text-3xl font-semibold text-slate-950">
-                Choisissez le meilleur professionnel à proximité
-              </h2>
-            </div>
-            <p className="max-w-xl text-sm leading-6 text-slate-600">
-              Sélectionnez un profil pour voir ses disponibilités, tarif et avis
-              avant de réserver.
-            </p>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            {plumbers.map((plumber) => (
-              <button
-                key={plumber.id}
-                type="button"
-                onClick={() => setSelectedId(plumber.id)}
-                className={`group rounded-[1.75rem] border p-6 text-left transition duration-300 ${
-                  selectedId === plumber.id
-                    ? "border-sky-500/30 bg-sky-50 shadow-lg"
-                    : "border-slate-200/80 bg-white hover:-translate-y-1 hover:shadow-xl"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
+              <label className="group block cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoCapture}
+                  className="hidden"
+                />
+                <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 py-16 transition group-hover:border-sky-400 group-hover:bg-sky-50/30">
+                  <svg
+                    className="h-16 w-16 text-sky-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  <div className="text-center">
                     <p className="text-lg font-semibold text-slate-950">
-                      {plumber.name}
+                      Cliquez pour photographier
                     </p>
                     <p className="mt-1 text-sm text-slate-600">
-                      {plumber.specialty}
+                      ou glissez une image
                     </p>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-900">
-                    {plumber.distance}
+                </div>
+              </label>
+            </div>
+
+            <div className="rounded-4xl border border-slate-200/80 bg-white p-6 shadow-lg">
+              <p className="text-sm font-semibold text-slate-700 mb-4">
+                Problemes courants :
+              </p>
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                {availableReasons.slice(0, 4).map((reason) => (
+                  <div
+                    key={reason}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700"
+                  >
+                    {reason}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* STEP 2: ESTIMATION - Show Quote */}
+        {step === "estimation" && selectedPhoto && (
+          <section className="space-y-6">
+            <div className="rounded-4xl border border-slate-200/80 bg-white p-8 shadow-xl">
+              <div className="mb-6 text-center">
+                <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
+                  Etape 2 / 3
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold text-slate-950">
+                  Votre estimation
+                </h2>
+              </div>
+
+              <div className="mb-8 rounded-3xl overflow-hidden bg-slate-100 h-64 flex items-center justify-center">
+                {photoPreview && (
+                  <Image
+                    src={photoPreview}
+                    alt="Votre photo"
+                    width={500}
+                    height={400}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                )}
+              </div>
+
+              <div className="mb-8 rounded-3xl border border-sky-200/50 bg-sky-50/50 p-6">
+                <p className="text-xs uppercase tracking-[0.25em] text-sky-600 font-semibold mb-4">
+                  Plombier recommande
+                </p>
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <div>
+                    <p className="text-2xl font-semibold text-slate-950">
+                      {selected.name}
+                    </p>
+                    <p className="text-sm text-slate-600 mt-1">
+                      {selected.specialty}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-900">
+                    {selected.distance}
                   </span>
                 </div>
-                <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-3xl bg-white p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                      Tarif
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-slate-950">
-                      {plumber.rate}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-2xl bg-white p-3 text-center">
+                    <p className="text-xs text-slate-500">Tarif/h</p>
+                    <p className="mt-1 font-semibold text-slate-950">
+                      {selected.rate}
                     </p>
                   </div>
-                  <div className="rounded-3xl bg-white p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                      Disponible
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-slate-950">
-                      {plumber.nextAvailable}
+                  <div className="rounded-2xl bg-white p-3 text-center">
+                    <p className="text-xs text-slate-500">Dispo</p>
+                    <p className="mt-1 font-semibold text-slate-950">
+                      {selected.nextAvailable}
                     </p>
                   </div>
-                  <div className="rounded-3xl bg-white p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                      Éval.
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-slate-950">
-                      {plumber.rating.toFixed(1)} ★
+                  <div className="rounded-2xl bg-white p-3 text-center">
+                    <p className="text-xs text-slate-500">Note</p>
+                    <p className="mt-1 font-semibold text-slate-950">
+                      {selected.rating.toFixed(1)}*
                     </p>
                   </div>
                 </div>
-              </button>
-            ))}
-          </div>
-        </section>
+              </div>
 
-        <section className="mt-12 grid gap-6 lg:grid-cols-[1fr_0.95fr]">
-          <div className="rounded-4xl border border-slate-200/80 bg-white p-6 shadow-xl transition duration-300 hover:-translate-y-1">
-            <div className="flex items-center justify-between gap-6">
-              <div>
+              <div className="mb-8 rounded-3xl bg-slate-950 text-white p-6 text-center">
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-300 mb-2">
+                  Estimation
+                </p>
+                <p className="text-5xl font-bold">45EUR</p>
+                <p className="mt-2 text-sm text-slate-300">
+                  Pour diagnostic + intervention simple
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setStep("contact")}
+                  className="flex-1 rounded-full bg-sky-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
+                >
+                  Continuer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("initial");
+                    setSelectedPhoto(null);
+                  }}
+                  className="flex-1 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                >
+                  Changer la photo
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* STEP 3: CONTACT - Confirm & Enter Details */}
+        {step === "contact" && (
+          <section>
+            <div className="rounded-4xl border border-slate-200/80 bg-white p-8 shadow-xl">
+              <div className="mb-8 text-center">
                 <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
-                  Détails du plombier
+                  Etape 3 / 3
                 </p>
-                <h2 className="mt-2 text-3xl font-semibold text-slate-950">
-                  {selected.name}
+                <h2 className="mt-3 text-3xl font-semibold text-slate-950">
+                  Confirmez votre demande
                 </h2>
-              </div>
-              <span className="rounded-full bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700">
-                {selected.completed}% interventions réussies
-              </span>
-            </div>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Spécialité</p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {selected.specialty}
+                <p className="mt-4 text-slate-600">
+                  Completez vos informations pour que {selected.name} vous
+                  recontacte rapidement.
                 </p>
               </div>
-              <div className="rounded-3xl bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Expérience</p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {selected.experience}
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-3xl bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Distance</p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {selected.distance}
-                </p>
-              </div>
-              <div className="rounded-3xl bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Taux horaire</p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {selected.rate}
-                </p>
-              </div>
-              <div className="rounded-3xl bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Prochaine dispo</p>
-                <p className="mt-2 text-lg font-semibold text-slate-950">
-                  {selected.nextAvailable}
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <span className="rounded-3xl bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
-                Rapide
-              </span>
-              <span className="rounded-3xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
-                Dispo mobile
-              </span>
-              <span className="rounded-3xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
-                Tarifs transparents
-              </span>
-            </div>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={() =>
-                  document
-                    .getElementById("booking-form")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="inline-flex min-w-45 items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                Réserver ce plombier
-              </button>
-              <Link
-                href="/profile"
-                className="inline-flex min-w-45 items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:border-slate-400 hover:bg-slate-100"
-              >
-                Voir mon dashboard
-              </Link>
-            </div>
-          </div>
 
-          <section
-            id="booking-form"
-            className="rounded-4xl border border-slate-200/80 bg-white p-6 shadow-xl"
-          >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
-                  Réservation
-                </p>
-                <h2 className="mt-2 text-3xl font-semibold text-slate-950">
-                  Formulaire de demande
-                </h2>
-              </div>
-              <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
-                {selected.name}
-              </span>
-            </div>
+              <form onSubmit={handleSubmitContact} className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="space-y-2 text-sm text-slate-700">
+                    Nom complet
+                    <input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      required
+                      placeholder="Jean Dupont"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+                    />
+                  </label>
+                  <label className="space-y-2 text-sm text-slate-700">
+                    Telephone
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      required
+                      placeholder="06 12 34 56 78"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+                    />
+                  </label>
+                </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2 text-sm text-slate-700">
-                  Nom complet
-                  <input
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    required
-                    placeholder="Jean Dupont"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
-                  />
-                </label>
-                <label className="space-y-2 text-sm text-slate-700">
-                  Téléphone
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    required
-                    placeholder="06 12 34 56 78"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
-                  />
-                </label>
-                <label className="space-y-2 text-sm text-slate-700 sm:col-span-2">
                   Adresse du chantier
                   <input
                     value={address}
                     onChange={(event) => setAddress(event.target.value)}
                     required
-                    placeholder="12 rue de la République, 75011 Paris"
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+                    placeholder="12 rue de la Republique, 75011 Paris"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
                   />
                 </label>
-              </div>
 
-              <label className="space-y-2 text-sm text-slate-700">
-                Description du problème
-                <textarea
-                  value={problem}
-                  onChange={(event) => setProblem(event.target.value)}
-                  required
-                  rows={4}
-                  placeholder="Fuite sous l'évier, problème de ballon d'eau chaude..."
-                  className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
-                />
-              </label>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="space-y-2 text-sm text-slate-700">
-                  Photo du chantier
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setSelectedPhoto(event.target.files?.[0] ?? null)
-                    }
-                    className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
-                  />
-                </label>
-                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-                  {photoPreview ? (
-                    <Image
-                      src={photoPreview}
-                      alt="Aperçu de la photo"
-                      width={400}
-                      height={220}
-                      className="mt-3 h-32 w-full rounded-3xl object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    "Ajoutez une photo avant / pendant l’intervention si possible."
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <button
-                  type="submit"
-                  className="inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
-                >
-                  Envoyer la demande
-                </button>
-                {submitted ? (
-                  <p className="rounded-3xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                    Demande envoyée ! Un plombier vous recontactera bientôt.
+                <div className="rounded-3xl border border-sky-200/50 bg-sky-50/50 p-4">
+                  <p className="text-sm text-slate-700 font-medium mb-2">
+                    Recapitulatif
                   </p>
-                ) : null}
-              </div>
-            </form>
-          </section>
+                  <div className="space-y-2 text-sm text-slate-600">
+                    <p>
+                      <span className="font-semibold">Plombier :</span>{" "}
+                      {selected.name}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Estimation :</span> 45EUR
+                    </p>
+                    <p>
+                      <span className="font-semibold">Disponibilite :</span>{" "}
+                      {selected.nextAvailable}
+                    </p>
+                  </div>
+                </div>
 
-          <div className="rounded-4xl border border-slate-200/80 bg-white p-6 shadow-xl">
-            <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
-              Votre tableau de bord
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-950">
-              Budget et suivi
-            </h2>
-            <p className="mt-4 text-slate-600">
-              Votre espace personnel montre vos dernières dépenses, vos
-              prochaines interventions et votre adresse de facturation.
-            </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Dépenses ce mois</p>
-                <p className="mt-3 text-3xl font-semibold text-slate-950">
-                  1 420€
-                </p>
-              </div>
-              <div className="rounded-3xl bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">Demandes envoyées</p>
-                <p className="mt-3 text-3xl font-semibold text-slate-950">5</p>
-              </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="submit"
+                    className="flex-1 rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  >
+                    Envoyer la demande
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep("estimation")}
+                    className="flex-1 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                  >
+                    Retour
+                  </button>
+                </div>
+
+                {submitted && (
+                  <div className="rounded-3xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700 text-center font-semibold">
+                    Demande envoyee ! Un plombier vous recontactera bientot.
+                  </div>
+                )}
+              </form>
             </div>
-            <div className="mt-8 rounded-[1.75rem] bg-slate-950 p-6 text-white shadow-xl">
-              <p className="text-sm uppercase tracking-[0.3em] text-sky-300">
-                Conseil
-              </p>
-              <p className="mt-3 text-base leading-7 text-slate-100">
-                En cas d’urgence, choisissez un plombier avec une disponibilité
-                le jour même et un bon ratio qualité/prix.
-              </p>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
+
+        {/* Info Section */}
+        {step === "initial" && (
+          <section className="mt-12 rounded-4xl border border-slate-200/80 bg-white p-6 shadow-lg">
+            <p className="text-sm font-semibold text-slate-700 mb-4">
+              Pourquoi cette approche ?
+            </p>
+            <ul className="space-y-2 text-sm text-slate-600">
+              <li className="flex gap-3">
+                <span className="text-sky-600 font-bold">*</span>
+                <span>Zero friction : commencez directement par une photo</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-sky-600 font-bold">*</span>
+                <span>Estimation instantanee adaptee a votre probleme</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-sky-600 font-bold">*</span>
+                <span>Formulaire court en fin de parcours uniquement</span>
+              </li>
+            </ul>
+          </section>
+        )}
       </main>
     </div>
   );
