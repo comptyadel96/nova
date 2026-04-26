@@ -16,7 +16,7 @@ export default function Home() {
 
   const photoPreview = useMemo(
     () => (selectedPhoto ? URL.createObjectURL(selectedPhoto) : null),
-    [selectedPhoto]
+    [selectedPhoto],
   );
 
   useEffect(() => {
@@ -269,7 +269,11 @@ export default function Home() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() => document.getElementById("booking-form")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() =>
+                  document
+                    .getElementById("booking-form")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
                 className="inline-flex min-w-45 items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
                 Réserver ce plombier
@@ -283,11 +287,18 @@ export default function Home() {
             </div>
           </div>
 
-          <section id="booking-form" className="rounded-4xl border border-slate-200/80 bg-white p-6 shadow-xl">
+          <section
+            id="booking-form"
+            className="rounded-4xl border border-slate-200/80 bg-white p-6 shadow-xl"
+          >
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-sky-600">Réservation</p>
-                <h2 className="mt-2 text-3xl font-semibold text-slate-950">Formulaire de demande</h2>
+                <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
+                  Réservation
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold text-slate-950">
+                  Formulaire de demande
+                </h2>
               </div>
               <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
                 {selected.name}
@@ -347,7 +358,9 @@ export default function Home() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(event) => setSelectedPhoto(event.target.files?.[0] ?? null)}
+                    onChange={(event) =>
+                      setSelectedPhoto(event.target.files?.[0] ?? null)
+                    }
                     className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
                   />
                 </label>
