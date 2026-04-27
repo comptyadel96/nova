@@ -11,6 +11,12 @@ export default function Home() {
   const [step, setStep] = useState<BookingStep>("initial");
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [selectedPlumberId, setSelectedPlumberId] = useState(plumbers[0].id);
+  const [analysis, setAnalysis] = useState<{
+    interventionType: string;
+    estimate: string;
+  } | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -33,10 +39,51 @@ export default function Home() {
   const selected =
     plumbers.find((plumber) => plumber.id === selectedPlumberId) ?? plumbers[0];
 
-  const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoCapture = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0] ?? null;
-    if (file) {
-      setSelectedPhoto(file);
+    if (!file) {
+      return;
+    }
+
+    setSelectedPhoto(file);
+    setAnalysis(null);
+    setAnalysisError(null);
+    setAnalysisLoading(true);
+
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    try {
+      const response = await fetch("/api/vision", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Impossible d'analyser l'image.");
+      }
+
+      setAnalysis({
+        interventionType:
+          result.interventionType || "Intervention a confirmer",
+        estimate: result.estimate || "45EUR",
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Une erreur est survenue pendant l'analyse.";
+      setAnalysisError(message);
+      setAnalysis({
+        interventionType: "Intervention a verifier",
+        estimate: "45EUR",
+      });
+    } finally {
+      setAnalysisLoading(false);
       const randomPlumber = plumbers[Math.floor(Math.random() * plumbers.length)];
       setSelectedPlumberId(randomPlumber.id);
       setStep("estimation");
@@ -227,13 +274,23 @@ export default function Home() {
                 </div>
               </div>
 
+              {analysisError && (
+                <div className="mb-6 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                  {analysisError}
+                </div>
+              )}
+
               <div className="mb-8 rounded-3xl bg-slate-950 text-white p-6 text-center">
                 <p className="text-sm uppercase tracking-[0.25em] text-slate-300 mb-2">
                   Estimation
                 </p>
-                <p className="text-5xl font-bold">45EUR</p>
+                <p className="text-5xl font-bold">
+                  {analysis?.estimate ?? (analysisLoading ? "..." : "45EUR")}
+                </p>
                 <p className="mt-2 text-sm text-slate-300">
-                  Pour diagnostic + intervention simple
+                  {analysis?.interventionType
+                    ? analysis.interventionType
+                    : "Pour diagnostic + intervention simple"}
                 </p>
               </div>
 
@@ -323,7 +380,8 @@ export default function Home() {
                       {selected.name}
                     </p>
                     <p>
-                      <span className="font-semibold">Estimation :</span> 45EUR
+                      <span className="font-semibold">Estimation :</span>{" "}
+                      {analysis?.estimate ?? "45EUR"}
                     </p>
                     <p>
                       <span className="font-semibold">Disponibilite :</span>{" "}
